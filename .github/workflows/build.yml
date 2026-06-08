@@ -1,0 +1,32 @@
+name: Build IronSignal VST3 (Windows)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: cmake --build build --config Release --parallel
+
+    - name: Package VST3
+      run: |
+        $vst3 = Get-ChildItem -Recurse -Filter "IronSignal.vst3" build | Select-Object -First 1
+        Compress-Archive -Path $vst3.FullName -DestinationPath IronSignal_VST3_Windows.zip
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: IronSignal-VST3-Windows
+        path: IronSignal_VST3_Windows.zip
+        retention-days: 30
